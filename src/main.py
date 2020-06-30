@@ -87,7 +87,6 @@ def process_task(task) :
     if int(task['env_code']) == 1 : 
         # excpects an (encrypted) zipped app with dockerfile
 
-        # todo : create better cache mechanisms to avoid redownloading/ redecrypting ...
         env_file_path = '{env_path}/{requester}-{key}'
         key = task['env_url'].replace('https://','').replace('http://','').replace('www.','').replace('/','_').replace(':','-')
         env_file_path = env_file_path.format(env_path = cfg.env_directory, requester=task['requester_id'], key=key)
