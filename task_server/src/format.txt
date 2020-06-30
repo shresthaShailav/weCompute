@@ -1,0 +1,95 @@
+endpoint /peers
+    # endpoint for peer information exchange
+    # active peers are those that can accept compute request. 
+    # those clients that query their task queue are considered active
+
+    GET : 
+        # get all the active peers visible to the requesting client
+        # todo some other security keys to verify the client
+
+        'id' : REQUIRED, id to identify the client
+
+    POST : 
+        # set the requesting client to active.
+        # must be called by the client often(10min) in order to be visible to others
+        # todo, allow the client to chose who they are active to
+
+        'id' : REQUIRED, id to make active
+
+
+
+endpoint /task
+    # endpoint for exchangind task information
+
+    GET : 
+        # get any task requested by other clients
+        # todo some other security keys to verify client
+
+        'id' : REQUIRED, id to identify the client 
+
+    POST : 
+        # post the task to other client's queue
+        # todo some other security keys to verify client
+
+        'requester_id' : REQUIRED, id to idenfify the requesting client (later appended )
+        'target_id' : REQUIRED, id to identify the client to which task is intended
+        'task_id' : REQUIRED, id for requester to identify the task
+
+        'env_code' : REQUIRED, code to specify environment setup procedure
+        'instr_code' : REQUIRED, code to specify instruction execution/reporting procedure
+       
+        'env_url' : CONTINGENT, url from which to download the env zip file
+        'env_encryption' : CONTINGENT, encryption algorithm used to encrypt decrypt the file
+        'env_secret' : CONTINGENT, secret key to decrypt file (interpreted as binary)
+        'env_compression' : CONTINGENT, type of compression used
+
+        'instr_cmd' : CONTINGENT, specifies the command to execute
+        'instr_url' : CONTINGENT, url from which to download the script
+        'instr_secret' : CONTINGENT, secret key to decrypt file
+        'instr_compression' : CONTINGENT, compression used
+
+        'use_cache' : CONTINGENT, defaults to true, if false, will not use cache
+        'response' : CONTINGENT, the result of the operation in binary
+
+
+
+ENV_CODES :
+    0) 
+        relevant keys : 
+        action : 
+            -> no need to fetch and environment information
+    1)
+        relevant keys : 
+            env_file, env_file_secret, env_file_compression
+
+            env_file
+                the environment file is expected to be an application code along with dockerfile
+
+        action : 
+            -> the client downloads the file using 'env_file'
+            -> the client uses 'env_encryption' & 'env_file_secret' to decrypt the file
+            -> the client uses the 'env_compression' to uncompress the file
+            -> the client expects final file to contain app along with Dockerfile
+            -> the client builds the file on it's local machine
+
+INSTR_CODES : 
+    0) 
+        relevant keys : 
+            task_response
+
+            task_response 
+                task response is expected to be a binary response as per the nature of the task
+
+        action : 
+            -> the client interprets the task as a result to some previously requested task
+            -> it inspects 'task_response' and uses the content for it's application purposes
+
+    1) 
+        relevant keys : 
+            instr_cmd
+
+        action : 
+            -> the client executes the 'instr_cmd' on the particular docker image
+            -> the client puts the result to requester_id
+                -> puts (task_id, result) into the queue of requester id with env_code & instr_code as 0
+
