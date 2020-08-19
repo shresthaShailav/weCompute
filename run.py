@@ -11,7 +11,7 @@ if __name__ == "__main__" :
 
     #self_id = 'DV_0011'
     host = 'http://localhost:4500'
-    host = 'http://15.206.168.1'
+    host = 'http://3.6.89.92'
     try : 
         self_id = sys.argv[1]
     except : 
